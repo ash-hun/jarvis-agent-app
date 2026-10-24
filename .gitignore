@@ -1,3 +1,7 @@
 node_modules/
 dist/
 .DS_Store
+
+# docs/ 밖의 마크다운(계획, 핸드오프, CLAUDE.md)은 개인 메모라 올리지 않는다
+*.md
+!docs/**/*.md
