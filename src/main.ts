@@ -5,6 +5,7 @@ import './reactor/hud.js';
 import './reactor/sphere.js';
 
 import * as chat from './chat.ts';
+import { onSwipe } from './swipe.ts';
 import { Socket, type ServerEvent } from './socket.ts';
 import { enablePush, pushState, type PushState } from './push.ts';
 import { apiUrl, authHeaders, loadConnection, saveConnection, wsUrl, type Connection } from './connection.ts';
@@ -17,6 +18,8 @@ declare global {
 }
 
 const SESSION_KEY = 'jarvis_session';
+// 에이전트 id → 그 에이전트로 마지막에 쓴 세션. 스와이프로 돌아올 때 같은 대화로 붙는다
+const AGENT_SESSIONS_KEY = 'jarvis_agent_sessions';
 const DEFAULT_SESSION = 'default';
 const ERROR_FLASH_MS = 3000;
 
@@ -33,10 +36,20 @@ let conn: Connection = loadConnection();
 let socket: Socket | null = null;
 let agents: Record<string, Agent> = {};
 let sessionId = localStorage.getItem(SESSION_KEY) || DEFAULT_SESSION;
+let currentAgent = '';
+let agentSessions: Record<string, string> = readJson(AGENT_SESSIONS_KEY);
 let depth = 0;  // 서브 에이전트까지 포함한 루프 중첩. 0 이 되어야 입력을 다시 받는다
 let approvalId: string | null = null;
 // 접속 직후 히스토리를 받는 동안 온 이벤트. 히스토리가 화면을 비우므로 그 뒤에 다시 흘린다
 let backlog: ServerEvent[] | null = null;
+
+function readJson(key: string): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(key) ?? '{}') ?? {};
+  } catch {
+    return {};
+  }
+}
 
 class Unauthorized extends Error {}
 
@@ -73,7 +86,9 @@ function setBusy(busy: boolean) {
 }
 
 function applyAgent(id: string) {
+  currentAgent = id;
   const a = agents[id];
+  document.querySelectorAll<HTMLElement>('.agent-dots i').forEach((dot) => dot.classList.toggle('on', dot.dataset.id === id));
   $('agent-name').textContent = a?.name ?? id.toUpperCase();
   $('agent-quote').textContent = a?.quote ?? '';
   input.placeholder = `Talk to ${a?.name ?? 'JARVIS'}`;
@@ -95,6 +110,8 @@ function handle(ev: ServerEvent) {
       sessionId = ev.session_id;
       localStorage.setItem(SESSION_KEY, sessionId);
       applyAgent(ev.agent?.id ?? ev.agent);
+      agentSessions = { ...agentSessions, [currentAgent]: sessionId };
+      localStorage.setItem(AGENT_SESSIONS_KEY, JSON.stringify(agentSessions));
       depth = 0;
       setBusy(false);
       void restoreHistory();
@@ -324,6 +341,67 @@ function renderAgentButtons() {
 $('open-sessions').onclick = () => void openDrawer();
 drawer.addEventListener('click', (e) => { if (e.target === drawer) drawer.hidden = true; });
 
+// ── 구체 스와이프: 에이전트 전환 ─────────────────────────────────────────────
+
+const sphere = document.querySelector<HTMLElement>('.sphere-wrap')!;
+let switching = false;
+
+function renderAgentDots() {
+  const box = $('agent-dots');
+  box.replaceChildren(...Object.keys(agents).map((id) => {
+    const dot = document.createElement('i');
+    dot.dataset.id = id;
+    dot.classList.toggle('on', id === currentAgent);
+    return dot;
+  }));
+  // 에이전트가 하나면 넘길 곳이 없으니 점도 숨긴다
+  box.hidden = Object.keys(agents).length < 2;
+}
+
+// 기억한 세션이 아직 서버에 있으면 그대로, 없으면 같은 에이전트의 세션, 그것도 없으면 새로 만든다
+async function sessionFor(agentId: string): Promise<string> {
+  const { sessions, agents: owners } = await api<{ sessions: string[]; agents: Record<string, string> }>('/api/sessions');
+  const remembered = agentSessions[agentId];
+  if (remembered && owners[remembered] === agentId) return remembered;
+  const existing = sessions.filter((id) => owners[id] === agentId).at(-1);
+  if (existing) return existing;
+  const { session_id } = await api<{ session_id: string }>('/api/sessions', {
+    method: 'POST',
+    body: JSON.stringify({ agent: agentId }),
+  });
+  return session_id;
+}
+
+async function switchAgent(dir: 1 | -1) {
+  const order = Object.keys(agents);
+  if (switching || order.length < 2) return;
+  const target = order[(order.indexOf(currentAgent) + dir + order.length) % order.length];
+  // 새 세션 생성은 멱등하지 않다. 응답 전 다시 밀어도 두 번 만들지 않게 막는다
+  switching = true;
+  applyAgent(target);  // 색과 이름은 바로 바꾸고, 세션은 connected 가 확정한다
+  try {
+    openSession(await sessionFor(target));
+  } catch (e) {
+    chat.addError(`전환 실패: ${(e as Error).message}`);
+  } finally {
+    switching = false;
+  }
+}
+
+onSwipe(sphere, {
+  onMove: (dx) => {
+    sphere.classList.add('dragging');
+    sphere.style.setProperty('--drag', `${dx}px`);
+    sphere.style.setProperty('--fade', String(Math.min(0.6, Math.abs(dx) / 400)));
+  },
+  onEnd: (dir) => {
+    sphere.classList.remove('dragging');
+    sphere.style.setProperty('--drag', '0px');
+    sphere.style.setProperty('--fade', '0');
+    if (dir) void switchAgent(dir);
+  },
+});
+
 // ── 설정 ─────────────────────────────────────────────────────────────────────
 
 function openSettings(error?: string) {
@@ -389,6 +467,7 @@ async function start() {
     const list = await api<{ agents: Agent[] }>('/api/agents');
     agents = Object.fromEntries(list.agents.map((a) => [a.id, a]));
     renderAgentButtons();
+    renderAgentDots();
   } catch (e) {
     socket?.close();
     setLink('Offline', false);

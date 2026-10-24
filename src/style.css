@@ -382,3 +382,23 @@ body.typing .reactor-caption { display: none; }
 .push-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; font-size: 13px; color: var(--text-dim); }
 .push-row button { flex: none; min-height: 40px; padding: 0 14px; border: 1px solid var(--hairline-strong); border-radius: 10px; background: none; color: var(--primary); font: 500 12px var(--mono); }
 .push-row button[hidden] { display: none; }
+
+/* 구체를 좌우로 밀면 손가락을 따라 밀리고 흐려진다. 놓으면 제자리로 돌아오고 색이 다음 에이전트로 섞인다 */
+.sphere-wrap {
+  --drag: 0px;
+  touch-action: pan-y;
+  transform: translateX(calc(var(--drag) * 0.6));
+  opacity: calc(1 - var(--fade, 0));
+  transition: transform 0.35s cubic-bezier(.2, .8, .2, 1), opacity 0.35s;
+  cursor: grab;
+}
+.sphere-wrap.dragging { transition: none; cursor: grabbing; }
+
+.agent-dots { display: flex; gap: 8px; min-height: 6px; }
+.agent-dots[hidden] { display: none; }
+.agent-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); opacity: 0.4; transition: opacity 0.3s, background 0.3s; }
+.agent-dots i.on { background: var(--primary); opacity: 1; box-shadow: 0 0 8px var(--pri-glow); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sphere-wrap { transition: none; }
+}

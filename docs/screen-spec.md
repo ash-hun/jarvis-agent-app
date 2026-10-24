@@ -40,6 +40,8 @@
 └─────────────────────────┘
 ```
 
+스와이프 전환: 기억한 세션이 서버의 `GET /api/sessions` 에 아직 그 에이전트 것으로 있으면 그 세션, 없으면 그 에이전트의 다른 세션, 그것도 없으면 `POST /api/sessions` 로 새로 만든다. 새로 만드는 동안 다시 밀어도 무시한다(생성은 멱등하지 않다). 색과 이름은 밀자마자 바뀌고, 구체 아래 점이 에이전트 위치를 보인다(에이전트가 하나면 숨김).
+
 리액터 상태: `agent_start`, `tool_execution_end` 는 THINKING, `tool_execution_start` 는 EXECUTING, 루트 `agent_end` 는 ACTIVE, `agent_error` 는 3초 동안 ERROR. 세션 에이전트가 바뀌면 `jarvis:palette` 이벤트로 링, 구, 별, CSS 색이 그 에이전트 팔레트로 바뀐다. 헤더의 표시는 소켓 연결만 보인다(ONLINE, LINKING, OFFLINE).
 
 **데이터**
@@ -55,6 +57,7 @@
 | 이름 | 위치 | 기본값 | 효과 |
 |---|---|---|---|
 | `jarvis_session` | localStorage | `default` | 앱을 열면 붙는 세션. `connected` 의 `session_id` 로 갱신 |
+| `jarvis_agent_sessions` | localStorage | `{}` | 에이전트 id 별 마지막 세션. 스와이프로 돌아오면 그 세션에 다시 붙는다 |
 | `jarvis_connection` | localStorage | `{server:"", token:""}` | 서버 주소와 키. 주소가 비면 페이지와 같은 출처 |
 | `body.busy` | DOM | 없음 | 루트 에이전트가 도는 중. 보내기 버튼이 중단 버튼이 된다 |
 
@@ -68,6 +71,7 @@
 | 🔔 아래 네, 아니오 | `proactive_feedback` 전송, 버튼이 문구로 바뀐다 |
 | 코드 블록 COPY | 코드를 클립보드에 복사 |
 | 앱을 내렸다가 다시 열기 | 끊긴 소켓이면 기다리지 않고 다시 붙고 히스토리를 다시 받는다 |
+| 구체를 왼쪽으로 밀기 | 다음 에이전트로 전환. 오른쪽은 이전. 60px 미만이거나 세로가 더 길면 제자리로 돌아온다 |
 
 화면에 그리는 서버 이벤트: `agent_start`(첫 단계만 새 말풍선), `message_update`, `stream_delta`, `tool_execution_start`/`end`(말풍선 위 칩), `agent_end`(`continues` 면 입력 잠금 유지), `agent_error`, `error`, `inner_thought`(💭), `proactive_message`(💬 filler, 🔔 proactive, `answer` 는 그리지 않음), `reminder`(⏰), `approval_request`/`resolved`. 나머지는 무시한다.
 
