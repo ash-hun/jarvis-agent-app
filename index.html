@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#02060c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>JARVIS</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <canvas class="starfield" id="starfield" aria-hidden="true"></canvas>
+
+  <header class="bar">
+    <button id="open-sessions" class="icon" aria-label="세션 목록"><span class="bars"></span></button>
+    <span id="status" class="link" data-kind="off"><i class="dot"></i><span id="status-text">연결 중</span></span>
+    <button id="open-settings" class="icon" aria-label="설정">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" /></svg>
+    </button>
+  </header>
+
+  <section class="reactor">
+    <div class="sphere-wrap">
+      <canvas id="sphere-gl" class="sphere-gl" aria-hidden="true"></canvas>
+      <canvas id="hud-canvas" class="sphere-canvas"></canvas>
+      <div class="reactor-wordmark" id="agent-name">J.A.R.V.I.S.</div>
+    </div>
+    <div class="reactor-status" id="reactor-status" data-state="idle">ACTIVE</div>
+    <p class="reactor-caption" id="agent-quote"></p>
+  </section>
+
+  <section class="dock">
+    <main id="log" aria-live="polite"></main>
+    <form id="composer" class="composer">
+      <textarea id="input" rows="1" placeholder="Talk to JARVIS" enterkeyhint="send" autocomplete="off"></textarea>
+      <button id="send" type="submit" aria-label="보내기">↑</button>
+    </form>
+  </section>
+
+  <aside id="sessions" class="drawer" hidden>
+    <div class="drawer-panel">
+      <h2>Sessions</h2>
+      <ul id="session-list"></ul>
+      <h2>New session</h2>
+      <div id="agent-list" class="agents"></div>
+    </div>
+  </aside>
+
+  <dialog id="settings" class="sheet">
+    <form method="dialog" id="settings-form">
+      <h2>Server link</h2>
+      <label>주소<input id="server" type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://mac-mini.tailnet.ts.net" /></label>
+      <label>접근 키<input id="token" type="password" autocomplete="off" placeholder="JARVIS_SECURITY__API_KEYS 의 키" /></label>
+      <p id="settings-error" class="error" hidden></p>
+      <p class="hint">주소를 비우면 이 페이지를 띄운 서버에 붙는다. 앱에서는 iPhone 의 Tailscale 이 켜져 있어야 한다.</p>
+      <h2>Notifications</h2>
+      <div class="push-row"><span id="push-state"></span><button type="button" id="push-enable">알림 켜기</button></div>
+      <div class="actions"><button value="cancel" formnovalidate>닫기</button><button value="save" class="primary">저장</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="approval" class="sheet">
+    <h2>Approval required</h2>
+    <p id="approval-reason"></p>
+    <pre id="approval-command"></pre>
+    <div class="actions">
+      <button data-answer="deny">거부</button>
+      <button data-answer="always" id="approval-always">항상 허용</button>
+      <button data-answer="allow" class="primary">허용</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

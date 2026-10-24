@@ -1,0 +1,22 @@
+{
+  "name": "jarvis-agent-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "check": "tsc --noEmit && node --test src/*.test.ts",
+    "ios": "npm run build && cap sync ios && cap open ios",
+    "ios:device": "npm run build && cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -destination id=$IOS_DEVICE -derivedDataPath ios/App/build -allowProvisioningUpdates DEVELOPMENT_TEAM=$IOS_TEAM CODE_SIGN_STYLE=Automatic -quiet build && xcrun devicectl device install app --device $IOS_DEVICE ios/App/build/Build/Products/Debug-iphoneos/App.app && xcrun devicectl device process launch --device $IOS_DEVICE com.ashhun.jarvis"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "three": "0.186.0"
+  }
+}
