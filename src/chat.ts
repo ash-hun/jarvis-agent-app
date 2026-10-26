@@ -63,8 +63,14 @@ export function appendDelta(delta: string) {
   });
 }
 
+// 지금 쓰고 있는 응답의 글. 도구 사이에 나온 말을 그때그때 읽는 데 쓴다
+export function assistantText() {
+  return current?.text ?? '';
+}
+
+// 끝난 응답의 글을 돌려준다. 음성 요청이면 이걸 읽는다
 export function endAssistant() {
-  if (!current) return;
+  if (!current) return '';
   const c = current;
   cancelAnimationFrame(c.frame);
   c.body.innerHTML = renderMarkdown(c.text);
@@ -73,6 +79,7 @@ export function endAssistant() {
   c.el.classList.remove('pending');
   if (!c.text.trim() && !c.el.querySelector('.tool')) c.el.remove();
   current = null;
+  return c.text;
 }
 
 export function toolStart(id: string, name: string, detail: string) {
@@ -109,8 +116,14 @@ export function addProactive(text: string, filler: boolean, onFeedback?: (accept
   append(el);
 }
 
-export function addReminder(title: string, text: string, failed: boolean) {
-  append(node(`msg reminder${failed ? ' err' : ''}`, `<b>⏰ ${escapeHtml(title)}</b><div class="md">${renderMarkdown(text)}</div>`));
+// from: 지금 보는 에이전트가 아닌 다른 에이전트의 알림이면 그 이름
+export function addReminder(title: string, text: string, failed: boolean, from = '') {
+  const who = from ? ` <small class="from">${escapeHtml(from)}</small>` : '';
+  append(node(`msg reminder${failed ? ' err' : ''}`, `<b>⏰ ${escapeHtml(title)}</b>${who}<div class="md">${renderMarkdown(text)}</div>`));
+}
+
+export function addNote(message: string) {
+  append(node('msg system', escapeHtml(message)));
 }
 
 export function addError(message: string) {

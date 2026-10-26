@@ -24,6 +24,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>구체를 눌러 JARVIS 에게 말할 때 녹음합니다.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>JARVIS 에게 한 말을 Apple 음성 인식으로 받아 적습니다.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -200,6 +200,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 .msg.reminder.err, .msg.system.err { border-color: var(--red); color: var(--red); }
+.msg.reminder .from { margin-left: 6px; opacity: .7; letter-spacing: .08em; }
 .msg.system { font: 12px var(--mono); color: var(--text-dim); text-align: center; }
 .badge { float: left; margin-right: 6px; }
 
@@ -401,4 +402,92 @@ body.typing .reactor-caption { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .sphere-wrap { transition: none; }
+}
+
+/* 슬래시 명령 자동완성. 입력창 바로 위에 뜨고, 고르거나 입력이 바뀌면 사라진다 */
+.composer { position: relative; }
+.slash-popup {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 40dvh;
+  overflow-y: auto;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.slash-popup[hidden] { display: none; }
+.slash-item {
+  display: grid;
+  grid-template-columns: minmax(84px, auto) 1fr;
+  gap: 10px;
+  align-items: baseline;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--hairline);
+  background: none;
+  color: var(--text-dim);
+  font: 12px var(--sans);
+  text-align: left;
+}
+.slash-item:last-child { border-bottom: 0; }
+.slash-item b { color: var(--pri-bright); font: 500 13px var(--mono); }
+.slash-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slash-item.active { background: color-mix(in srgb, var(--primary) 10%, transparent); }
+
+/* 음성 상태 고리(HUD 와 같은 색): 듣기 초록, 전사와 합성 대기 강조색, 읽기 마젠타 */
+.sphere-wrap.voice-listening::after,
+.sphere-wrap.voice-processing::after,
+.sphere-wrap.voice-speaking::after {
+  content: '';
+  position: absolute;
+  inset: 21%;
+  border-radius: 50%;
+  border: 2px solid var(--v-border);
+  pointer-events: none;
+  z-index: 5;
+}
+.sphere-wrap.voice-listening::after { --v-border: #4ade80; --v-color: rgba(74, 222, 128, 0.5); animation: voice-pulse 1.1s ease-in-out infinite; }
+.sphere-wrap.voice-processing::after { --v-border: var(--accent); --v-color: color-mix(in srgb, var(--accent) 50%, transparent); animation: voice-pulse 0.7s ease-in-out infinite; }
+.sphere-wrap.voice-speaking::after { --v-border: #e879f9; inset: 22%; animation: voice-ripple 0.9s ease-out infinite; }
+@keyframes voice-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--v-color); }
+  50% { box-shadow: 0 0 0 14px transparent; }
+}
+@keyframes voice-ripple {
+  0% { opacity: 0.8; transform: scale(0.85); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+/* 말로 답하는 승인: 모달이 아니라 아래 띠. 구체가 보이고 탭할 수 있어야 듣기를 끝낼 수 있다 */
+.sheet.voice[open] {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 20;
+  margin: 0 auto;
+  box-shadow: 0 -12px 40px rgb(0 0 0 / 0.5);
+}
+.sheet.voice pre { max-height: 14dvh; }
+
+/* 탭 없이 온 읽기를 iOS 가 막았다. 탭하면 풀린다 */
+.sphere-wrap.audio-locked::before {
+  content: '탭해서 소리 켜기';
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font: 12px var(--mono);
+  color: var(--text);
+  background: color-mix(in srgb, var(--red) 25%, transparent);
+  border: 1px solid var(--red);
+  pointer-events: none;
+  z-index: 6;
+  white-space: nowrap;
 }

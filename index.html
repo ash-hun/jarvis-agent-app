@@ -39,6 +39,7 @@
   <section class="dock">
     <main id="log" aria-live="polite"></main>
     <form id="composer" class="composer">
+      <div id="slash-popup" class="slash-popup" role="listbox" hidden></div>
       <textarea id="input" rows="1" placeholder="Talk to JARVIS" enterkeyhint="send" autocomplete="off"></textarea>
       <button id="send" type="submit" aria-label="보내기">↑</button>
     </form>
@@ -70,6 +71,7 @@
     <h2>Approval required</h2>
     <p id="approval-reason"></p>
     <pre id="approval-command"></pre>
+    <p id="approval-hint" class="hint" hidden></p>
     <div class="actions">
       <button data-answer="deny">거부</button>
       <button data-answer="always" id="approval-always">항상 허용</button>

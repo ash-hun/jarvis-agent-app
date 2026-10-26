@@ -31,6 +31,11 @@ export class Socket {
     return true;
   }
 
+  // 웨이크워드 오디오. 붙어 있지 않으면 버린다(지난 소리를 쌓아 보낼 이유가 없다)
+  sendBinary(data: ArrayBuffer) {
+    if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(data);
+  }
+
   close() {
     this.stopped = true;
     clearTimeout(this.timer);
