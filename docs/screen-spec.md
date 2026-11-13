@@ -46,7 +46,7 @@
 
 슬래시 명령: 커서 앞이 맨 앞이나 공백 뒤의 `/조각` 이면 `connected.slash_commands` 를 이름 앞부분으로 거른 목록이 입력창 위에 뜬다. 항목 탭, Enter, Tab 은 조각을 `/이름 ` 으로 바꾸고, 목록이 열려 있는 동안 Enter 는 보내지 않는다. 명령은 그대로 `user_message` 로 가고 처리는 서버가 한다.
 
-ION 띠: 플랫폼 감시(Ion)가 연 사고가 있으면 리액터와 응답 패널 사이에 붉은 띠가 뜬다(`src/ion.ts`, 줄 모양은 `src/ion-card.ts`). `GET /ion/status` 로 목록을 맞추고 `GET /ion/events`(SSE, 접근 키는 `?token=`)로 새 사고와 답을 받으며, 끊겨 있어도 60초마다 다시 읽는다. 줄마다 제목, 상세, 사고 종류별 버튼(재기동, 멈춤, 작업 멈춤, 무시)이 있고 누르면 `POST /ion/incidents/{id}/respond` 로 보낸다. 답한 줄은 결과("재기동, 재기동함")를 8초 보이고 사라지며, 서버에서 닫힌 사고는 띠에서 빠진다. 열린 사고 중 가장 심한 등급이 `body[data-ion]` 에 들어가 구체 뒤가 critical 은 붉게, warning 은 주황으로 물든다. 앱이 앞으로 오거나 서버 연결 시트를 저장하면 다시 읽고, 푸시 알림을 눌러 앱이 열려도 바로 읽는다. `/ion/` 은 nginx 가 Ion 컨테이너로 보내므로 백엔드가 죽어도 띠는 산다. Ion 이 없거나 못 붙으면 띠는 숨긴 채 둔다.
+ION 띠: 플랫폼 감시(Ion)가 연 사고가 있으면 리액터와 응답 패널 사이에 붉은 띠가 뜬다(`src/ion.ts`, 줄 모양은 `src/ion-card.ts`). `GET /ion/status` 로 목록을 맞추고 `GET /ion/events`(SSE, 접근 키는 `?token=`)로 새 사고와 답을 받으며, 끊겨 있어도 60초마다 다시 읽는다. 줄마다 제목, 상세, 사고 종류별 버튼(재기동, 멈춤, 작업 멈춤, 무시)이 있고 누르면 `POST /ion/incidents/{id}/respond` 로 보낸다. 답한 줄은 결과("재기동, 재기동함")를 8초 보이고 사라지며, 서버에서 닫힌 사고는 띠에서 빠진다. 열린 사고 중 가장 심한 등급이 `body[data-ion]` 에 들어가 구체 뒤가 critical 은 붉게, warning 은 주황으로 물든다. 앱이 앞으로 오거나 서버 연결 시트를 저장하면 다시 읽고, 푸시 알림을 눌러 앱이 열려도 바로 읽는다. 백엔드가 죽어 연결 실패로 열린 서버 연결 시트는 critical 사고가 뜨면 닫아 띠와 버튼이 보이게 한다(⚙ 로 직접 연 시트는 두고, 오류 글이 보이는 시트만 닫는다). `/ion/` 은 nginx 가 Ion 컨테이너로 보내므로 백엔드가 죽어도 띠는 산다. Ion 이 없거나 못 붙으면 띠는 숨긴 채 둔다.
 
 리액터 상태: `agent_start`, `tool_execution_end` 는 THINKING, `tool_execution_start` 는 EXECUTING, 루트 `agent_end` 는 ACTIVE, `agent_error` 는 3초 동안 ERROR. 세션 에이전트가 바뀌면 `jarvis:palette` 이벤트로 링, 구, 별, CSS 색이 그 에이전트 팔레트로 바뀐다. 헤더의 표시는 소켓 연결만 보인다(ONLINE, LINKING, OFFLINE).
 
