@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': JARVIS_URL,
+      '/ion': JARVIS_URL,
       '/ws': { target: JARVIS_URL, ws: true },
     },
   },

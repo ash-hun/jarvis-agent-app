@@ -37,6 +37,10 @@
   </section>
 
   <section class="dock">
+    <section id="ion-strip" class="ion-strip" hidden aria-live="assertive">
+      <span class="ion-mark">ION</span>
+      <ul id="ion-list" class="ion-list"></ul>
+    </section>
     <main id="log" aria-live="polite"></main>
     <form id="composer" class="composer">
       <div id="slash-popup" class="slash-popup" role="listbox" hidden></div>
@@ -80,5 +84,6 @@
   </dialog>
 
   <script type="module" src="/src/main.ts"></script>
+  <script type="module" src="/src/ion.ts"></script>
 </body>
 </html>
