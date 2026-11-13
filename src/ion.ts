@@ -19,6 +19,15 @@ function render() {
   const severity = worst([...rows.values()].map((r) => r.incident));
   if (severity) document.body.dataset.ion = severity;
   else delete document.body.dataset.ion;
+  if (severity === 'critical') closeFailureSheet();
+}
+
+// 백엔드가 죽으면 앱이 연결 시트를 띄우는데, 그 원인이 사고로 떠 있으면 시트가 띠와 버튼을 가린다.
+// 연결 실패로 열린 시트(오류 글이 보이는 것)만 닫는다. 사용자가 ⚙ 로 연 시트는 그대로 둔다
+function closeFailureSheet() {
+  const sheet = document.getElementById('settings') as HTMLDialogElement | null;
+  const error = document.getElementById('settings-error');
+  if (sheet?.open && error && !error.hidden) sheet.close();
 }
 
 function line(incident: Incident): HTMLElement {
