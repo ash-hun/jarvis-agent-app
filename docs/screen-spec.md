@@ -46,6 +46,8 @@
 
 슬래시 명령: 커서 앞이 맨 앞이나 공백 뒤의 `/조각` 이면 `connected.slash_commands` 를 이름 앞부분으로 거른 목록이 입력창 위에 뜬다. 항목 탭, Enter, Tab 은 조각을 `/이름 ` 으로 바꾸고, 목록이 열려 있는 동안 Enter 는 보내지 않는다. 명령은 그대로 `user_message` 로 가고 처리는 서버가 한다.
 
+ION 띠: 플랫폼 감시(Ion)가 연 사고가 있으면 리액터와 응답 패널 사이에 붉은 띠가 뜬다(`src/ion.ts`, 줄 모양은 `src/ion-card.ts`). `GET /ion/status` 로 목록을 맞추고 `GET /ion/events`(SSE, 접근 키는 `?token=`)로 새 사고와 답을 받으며, 끊겨 있어도 60초마다 다시 읽는다. 줄마다 제목, 상세, 사고 종류별 버튼(재기동, 멈춤, 작업 멈춤, 무시)이 있고 누르면 `POST /ion/incidents/{id}/respond` 로 보낸다. 답한 줄은 결과("재기동, 재기동함")를 8초 보이고 사라지며, 서버에서 닫힌 사고는 띠에서 빠진다. 열린 사고 중 가장 심한 등급이 `body[data-ion]` 에 들어가 구체 뒤가 critical 은 붉게, warning 은 주황으로 물든다. 앱이 앞으로 오거나 서버 연결 시트를 저장하면 다시 읽고, 푸시 알림을 눌러 앱이 열려도 바로 읽는다. `/ion/` 은 nginx 가 Ion 컨테이너로 보내므로 백엔드가 죽어도 띠는 산다. Ion 이 없거나 못 붙으면 띠는 숨긴 채 둔다.
+
 리액터 상태: `agent_start`, `tool_execution_end` 는 THINKING, `tool_execution_start` 는 EXECUTING, 루트 `agent_end` 는 ACTIVE, `agent_error` 는 3초 동안 ERROR. 세션 에이전트가 바뀌면 `jarvis:palette` 이벤트로 링, 구, 별, CSS 색이 그 에이전트 팔레트로 바뀐다. 헤더의 표시는 소켓 연결만 보인다(ONLINE, LINKING, OFFLINE).
 
 **데이터**
@@ -126,6 +128,7 @@
 | 저장 | 주소를 정규화(앞뒤 공백, 끝 슬래시 제거, 스킴이 없으면 `https://`)해 저장하고 처음부터 다시 연결 |
 | 닫기 | 아무것도 바꾸지 않는다 |
 | 알림 켜기 | 권한을 묻고 `GET /api/push/vapid` 로 구독, `PUT /api/push/subscriptions` 로 서버에 등록. 이미 켜져 있으면 버튼이 "다시 등록"이 되어 같은 구독을 서버에 다시 맞춘다. 받은 푸시는 본문의 `icon`(에이전트 아바타)을 알림 아이콘으로 쓰고, 없으면 앱 아이콘 |
+| 알림 누르기 | 앱을 앞으로 가져온다. Ion 사고 알림(`type: incident`)은 버튼을 보이는 환경(macOS, Android)에서는 알림의 버튼으로 바로 `POST /ion/incidents/{id}/respond` 를 부르고 결과를 같은 알림 자리에 띄운다. iOS 는 버튼을 보이지 않으므로 누르면 앱이 열리며 ION 띠에서 답한다. service worker 는 페이지가 넘겨 둔 서버 주소와 접근 키(IndexedDB `jarvis-sw`)로 부른다 |
 
 네이티브 앱에서 주소가 비어 있으면 시작하자마자 연다. 연결 실패로 열리면 사유를 빨간 글로 보인다.
 
@@ -156,6 +159,8 @@
 | 재연결 소켓 | `src/socket.ts` | 주소, 이벤트 처리기 | 대화 |
 | 리액터 링, 별 배경 | `src/reactor/hud.js` (HUD 복사본) | `window.HUD.setState`, `jarvis:palette` | 대화 |
 | 입자 구 | `src/reactor/sphere.js` (HUD 복사본, three 0.186.0) | `window.HUD.state`, `jarvis:palette` | 대화 |
+| ION 띠 | `src/ion.ts`, `src/ion-card.ts`(순수 규칙) | `/ion/status`, `/ion/events`, service worker 의 `ion` 메시지 | 대화 |
+| 알림 service worker | `public/sw.js` | 푸시 본문, 페이지의 `connection` 메시지 | 대화 |
 
 ---
 
@@ -170,4 +175,5 @@
 - 지난 응답과 내가 보낸 말은 화면에서 다시 볼 수 없다. 다시 연결하면 마지막 응답만 돌아오고, 🔔, 리마인더, 💭 는 히스토리 API 에 없어서 사라진다.
 - 승인 요청은 한 번에 하나만 띄운다. 떠 있는 동안 온 새 요청이 앞의 것을 덮는다.
 - 열린 것처럼 보이지만 죽은 소켓은 감지하지 못한다.
+- iOS 알림에는 버튼이 없다(WebKit 이 Web Push 의 `actions` 를 보이지 않는다). Ion 사고는 알림을 눌러 앱을 연 뒤 띠에서 답한다.
 - 알림은 홈 화면 웹앱에서만 켤 수 있다. Safari 탭이면 홈 화면 추가 안내, 네이티브 앱이면 지원하지 않음으로 보인다. 백엔드의 `/api/push/*` 가 없으면 알림 켜기는 실패를 보인다.

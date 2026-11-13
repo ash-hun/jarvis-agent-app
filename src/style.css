@@ -491,3 +491,43 @@ body.typing .reactor-caption { display: none; }
   z-index: 6;
   white-space: nowrap;
 }
+
+/* ── ION 띠 ──────────────────────────────────────────────────────────────────
+ * 플랫폼 감시(Ion)의 열린 사고. 리액터 아래, 응답 패널 위에 붙고 없으면 숨는다. 배경은 심각도로 물든다. */
+:root { --ion-critical: #f05f5f; --ion-warning: #f08a3c; }
+.ion-strip {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 0 12px 6px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--red) 45%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  font: 13px var(--sans);
+}
+.ion-strip[hidden] { display: none; }
+.ion-mark { color: var(--red); font: 600 11px var(--sans); letter-spacing: 0.18em; padding-top: 3px; }
+.ion-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.ion-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ion-title { color: var(--text); }
+.ion-detail { color: var(--text-dim); }
+.ion-result { color: var(--accent); }
+.ion-item button {
+  font: 12px var(--sans);
+  padding: 4px 10px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+}
+.ion-item button:disabled { opacity: 0.5; }
+.ion-item button.primary { border-color: color-mix(in srgb, var(--red) 60%, transparent); color: var(--red); }
+body[data-ion="warning"] .ion-strip { border-color: color-mix(in srgb, var(--ion-warning) 45%, transparent); background: color-mix(in srgb, var(--ion-warning) 8%, transparent); }
+body[data-ion="warning"] .ion-mark, body[data-ion="warning"] .ion-item button.primary { color: var(--ion-warning); border-color: color-mix(in srgb, var(--ion-warning) 60%, transparent); }
+/* 열린 사고의 심각도대로 구체 뒤가 물든다. body[data-ion] 은 ion.ts 가 가장 심한 등급으로 둔다 */
+.reactor::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
+  background: radial-gradient(ellipse 48% 52% at 50% 48%, var(--ion-tint, transparent), transparent 70%);
+  opacity: 0; transition: opacity .6s ease;
+}
+body[data-ion="critical"] .reactor::before { --ion-tint: color-mix(in srgb, var(--ion-critical) 38%, transparent); opacity: 1; }
+body[data-ion="warning"] .reactor::before { --ion-tint: color-mix(in srgb, var(--ion-warning) 32%, transparent); opacity: 1; }
